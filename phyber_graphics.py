@@ -14,7 +14,8 @@ class Simulation:
         self.running = True
 
         pygame.init()
-        self.screen = pygame.display.set_mode(size)
+        self. size = size
+        self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
 
         self.loop()
@@ -42,7 +43,7 @@ class Simulation:
             self.draw_circle((0, 255, 0), b.position, b.radius)
 
     def draw_markers(self):
-        self.engine.make_data_markers(self.deltaTime)
+        self.engine.make_data_markers(self.deltaTime, self.size)
         if self.engine.showData[0]:
             self.draw_circle(self.engine.massCenter.colour, self.engine.massCenter.position, self.engine.massCenter.radius)
 
@@ -68,15 +69,15 @@ class Simulation:
         pygame.quit()
 
 def main():
-    b1 = phyber_engine.p_Ball(300, 30)
+    b1 = phyber_engine.p_Ball(60, 30)
     b1.set_position([100, 20])
-    b1.set_velocity([0.00001, 0])
+    b1.set_velocity([0.00003, 0.00002])
 
-    b2 = phyber_engine.p_Ball(150, 15)
+    b2 = phyber_engine.p_Ball(30, 15)
     b2.set_position([400, 60])
     b2.set_velocity([-0.00005, 0])
 
-    b3 = phyber_engine.p_Ball(100, 10)
+    b3 = phyber_engine.p_Ball(20, 10)
     b3.set_position([250, 200])
 
     phyber = phyber_engine.Phyber([b1, b2, b3], [True, True, False])

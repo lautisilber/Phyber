@@ -88,7 +88,7 @@ class p_ArrowMarker:
         self.pos2 = p
 
 class p_LineMarker:
-    def __init__(self, colour, thikness, pos, scale = 30000000):
+    def __init__(self, colour, thikness, pos, scale = 10000):
         self.colour = colour
         self.thickness = thikness
         self.pos = pos
@@ -145,6 +145,12 @@ class p_math:
         return p_math.vec_magnitude(p_math.vec_from_points(v1, v2))
 
     @staticmethod
+    def vec_cross(v1, v2):
+        v1.append(0)
+        v2.append(0)
+        return [(v1[1] * v2[2]) - (v1[2] * v2[1]), (v1[2] * v2[0]) - (v1[0] * v2[2]), (v1[0] * v2[1]) - (v1[1] * v2[0])]
+
+    @staticmethod
     def vec_angle_x(v):
         if v[0] != 0 or v[1] != 0:
             return math.acos(v[0] / p_math.vec_magnitude(v))
@@ -169,11 +175,12 @@ class Phyber:
         self.dataMarkers = list()
         self.massCenter = None
         self.linearMomentum = list()
+        self.angularMomentum = list()
+
         if self.showData[0]:
             self.massCenter = p_CircleMarker(10, (255, 0, 0), 'mass center')
         if self.showData[1]:
-            self.linearMomentum.append(p_LineMarker((255, 255, 0), 3, [0, 0]))
-            for i in range(len(self.bodies)):
+            for i in range(len(self.bodies) + 1):
                 self.linearMomentum.append(p_LineMarker((255, 255, 0), 3, [0, 0]))
 
     def calculate_forces(self, deltaTime):
@@ -199,7 +206,7 @@ class Phyber:
                 self.bodies[n].acceleration[0] += (force * -unionVec[0]) / self.bodies[n].mass
                 self.bodies[n].acceleration[1] += (force * -unionVec[1]) / self.bodies[n].mass
 
-    def make_data_markers(self, deltaTime):
+    def make_data_markers(self, deltaTime, size):
         if self.showData[0]:
             self.calc_mass_center(deltaTime)
 
@@ -224,16 +231,14 @@ class Phyber:
         self.massCenter.set_acceleration(((self.massCenter.velocity[0] - oldVel[0]) / deltaTime, (self.massCenter.velocity[1] - oldVel[1]) / deltaTime))
 
     def calc_linear_momentum(self):
-        massTot = 0
         linMomTot = [0, 0]
         for i in range(len(self.bodies)):
-            massTot += self.bodies[i].mass
-            self.linearMomentum[i + 1].set_pos([self.bodies[i].velocity[0]/self.bodies[i].mass, self.bodies[i].velocity[1]/self.bodies[i].mass])
+            self.linearMomentum[i + 1].set_pos([self.bodies[i].velocity[0] * self.bodies[i].mass, self.bodies[i].velocity[1] * self.bodies[i].mass])
             linMomTot[0] += self.linearMomentum[i + 1].pos[0]
             linMomTot[1] += self.linearMomentum[i + 1].pos[1]
             self.linearMomentum[i + 1].scale_line()
             self.linearMomentum[i + 1].translate(self.bodies[i].position)
-        self.linearMomentum[0].set_pos([linMomTot[0] / massTot, linMomTot[1] / massTot])
+        self.linearMomentum[0].set_pos([linMomTot[0], linMomTot[1]])
         self.linearMomentum[0].scale_line()
         if self.showData[0]:
             self.linearMomentum[0].translate(self.massCenter.position)
