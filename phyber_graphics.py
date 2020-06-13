@@ -22,7 +22,7 @@ class Simulation:
     def window_title(self):
         pygame.display.set_caption('Phyber Engine - {} fps'.format(self.clock.get_fps()))
 
-    def calc_deltaTime():
+    def calc_deltaTime(self):
         t = pygame.time.get_ticks()
         self.deltaTime = (t - self.lastTime) / 1000
         self.lastTime = t
@@ -30,8 +30,8 @@ class Simulation:
     def draw_circle(self, colour, position, radius):
         pygame.draw.circle(self.screen, colour, (int(position[0]), int(position[1])), int(radius))
 
-    def draw_line(self, colour, pos1, pos2):
-        pygame.draw.line(self.screen, colour, pos1, pos2, 10)
+    def draw_line(self, colour, pos1, pos2, width=5):
+        pygame.draw.line(self.screen, colour, pos1, pos2, width)
 
     def draw_polygon(self, colour, vertices, width=0):
         pygame.draw.polygon(self.screen, colour, vertices, width)
@@ -45,6 +45,10 @@ class Simulation:
         self.engine.make_data_markers(self.deltaTime)
         if self.engine.showData[0]:
             self.draw_circle(self.engine.massCenter.colour, self.engine.massCenter.position, self.engine.massCenter.radius)
+
+        if self.engine.showData[1]:
+            for markers in self.engine.linearMomentum:
+                self.draw_line(markers.colour, markers.vert1, markers.vert2, markers.thickness)
 
     def loop(self):
         while self.running:
@@ -64,15 +68,15 @@ class Simulation:
         pygame.quit()
 
 def main():
-    b1 = phyber_engine.p_Ball(50, 30)
+    b1 = phyber_engine.p_Ball(300, 30)
     b1.set_position([100, 20])
     b1.set_velocity([0.00001, 0])
 
-    b2 = phyber_engine.p_Ball(25, 15)
+    b2 = phyber_engine.p_Ball(150, 15)
     b2.set_position([400, 60])
     b2.set_velocity([-0.00005, 0])
 
-    b3 = phyber_engine.p_Ball(100, 12)
+    b3 = phyber_engine.p_Ball(100, 10)
     b3.set_position([250, 200])
 
     phyber = phyber_engine.Phyber([b1, b2, b3], [True, True, False])

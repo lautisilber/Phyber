@@ -88,26 +88,31 @@ class p_ArrowMarker:
         self.pos2 = p
 
 class p_LineMarker:
-    def __init__(self, colour, thikness, pos2, pos1 = [0, 0], scale = 30000000):
+    def __init__(self, colour, thikness, pos, scale = 30000000):
         self.colour = colour
         self.thickness = thikness
-        self.pos1 = pos1
-        self.pos2 = pos2
+        self.pos = pos
         self.scale = scale
-        self.magnitude = p_math.vec_magnitude(p_math.vec_from_points(self.pos1, self.pos2))
+        self.magnitude = p_math.vec_magnitude(p_math.vec_from_points([0, 0], self.pos))
 
-        self.vert1 = self.pos1
-        self.vert2 = self.pos2
+        self.vert1 = 0
+        self.vert2 = self.pos
 
     def scale_line(self):
-        vec = p_math.vec_mult(p_math.vec_from_points(self.pos1, self.pos2), self.scale)
+        vec = p_math.vec_mult(p_math.vec_from_points([0, 0], self.pos), self.scale)
+        self.vert1 = [0, 0]
+        self.vert2 = vec
 
     def translate(self, trans):
-        self.vert1 = p_math.vec_add(self.pos1, trans)
-        self.vert2 = p_math.vec_add(self.pos2, trans)
+        self.vert1 = trans
+        self.vert2 = [self.vert2[0] + trans[0], self.vert2[1] +trans[1]] #p_math.vec_add(self.pos, trans)
+        pass
 
-    def set_pos2(self, p):
-        self.pos2 = p
+    def set_pos(self, p):
+        self.pos = p
+
+    def get_magnitude(self):
+        p_math.vec_magnitude(self.pos)
 
 
 class p_math:
@@ -163,11 +168,13 @@ class Phyber:
         self.showData = markers #[False, False, False]
         self.dataMarkers = list()
         self.massCenter = None
-        self.linearMomentum = None
+        self.linearMomentum = list()
         if self.showData[0]:
             self.massCenter = p_CircleMarker(10, (255, 0, 0), 'mass center')
         if self.showData[1]:
-            self.linearMomentum = p_LineMarker((255, 255, 0), 3, [0, 0])
+            self.linearMomentum.append(p_LineMarker((255, 255, 0), 3, [0, 0]))
+            for i in range(len(self.bodies)):
+                self.linearMomentum.append(p_LineMarker((255, 255, 0), 3, [0, 0]))
 
     def calculate_forces(self, deltaTime):
         # gravity
@@ -196,6 +203,9 @@ class Phyber:
         if self.showData[0]:
             self.calc_mass_center(deltaTime)
 
+        if self.showData[1]:
+            self.calc_linear_momentum()
+
     def calc_mass_center(self, deltaTime):
         if (deltaTime == 0):
             deltaTime = 0.00001
@@ -213,6 +223,22 @@ class Phyber:
 
         self.massCenter.set_acceleration(((self.massCenter.velocity[0] - oldVel[0]) / deltaTime, (self.massCenter.velocity[1] - oldVel[1]) / deltaTime))
 
+    def calc_linear_momentum(self):
+        massTot = 0
+        linMomTot = [0, 0]
+        for i in range(len(self.bodies)):
+            massTot += self.bodies[i].mass
+            self.linearMomentum[i + 1].set_pos([self.bodies[i].velocity[0]/self.bodies[i].mass, self.bodies[i].velocity[1]/self.bodies[i].mass])
+            linMomTot[0] += self.linearMomentum[i + 1].pos[0]
+            linMomTot[1] += self.linearMomentum[i + 1].pos[1]
+            self.linearMomentum[i + 1].scale_line()
+            self.linearMomentum[i + 1].translate(self.bodies[i].position)
+        self.linearMomentum[0].set_pos([linMomTot[0] / massTot, linMomTot[1] / massTot])
+        self.linearMomentum[0].scale_line()
+        if self.showData[0]:
+            self.linearMomentum[0].translate(self.massCenter.position)
+        else:
+            self.linearMomentum[0].translate([100, 100])
 
 def main():
     b1 = p_Ball(5, 10)
