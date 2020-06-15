@@ -99,6 +99,9 @@ class vec4:
     def __getitem__(self, key):
         return self.values[key]
 
+    def __setitem__(self, key, item):
+        self.values[key] = item
+
     def __repr__(self):
         return str('vec4 -> ') + str(self.values)
 
@@ -176,6 +179,9 @@ class mat4x4:
     def __getitem__(self, key):
         return self.mat[key]
 
+    def __setitem__(self, key, item):
+        self.mat[key] = item
+
     def __repr__(self):
         return str('mat4x4 -> ') + str(self.mat)
 
@@ -191,8 +197,58 @@ class mat4x4:
             for c in range(4):
                 mat[r][c] = self[r][c] - other[r][c]
 
-    def __mult__(self, other):
+    def __mul__(self, other):
+        if isinstance(other, vec4):
+            vec = vec4(0, 0, 0, 0)
+            vec[0] = other[0] * self[0][0] + other[1] * self[1][0] + other[2] * self[2][0] + other[3] * self[3][0]
+            vec[1] = other[0] * self[0][1] + other[1] * self[1][1] + other[2] * self[2][1] + other[3] * self[3][1]
+            vec[2] = other[0] * self[0][2] + other[1] * self[1][2] + other[2] * self[2][2] + other[3] * self[3][2]
+            vec[3] = other[0] * self[0][3] + other[1] * self[1][3] + other[2] * self[2][3] + other[3] * self[3][3]
+            return vec
+        elif type(other) == type(1) or type(other) == type(1.0):
+            mat = mat4x4()
+            for c in range(4):
+                for r in range(4):
+                    mat[r][c] = self[r][c] * other
+            return mat
+        else:
+            raise Exception
+
+    @staticmethod
+    def make_identity():
         mat = mat4x4()
-        if type(other) == type(self):
-            pass
+        for i in range(4):
+            mat[i][i] = 1
+        return mat
+
+    @staticmethod
+    def mat_mat_multiply(m1, m2):
+        assert isinstance(m1, mat4x4)
+        assert isinstance(m2, mat4x4)
+        mat = mat4x4()
+        for c in range(4):
+            for r in range(4):
+                mat[r][c] = m1[r][0] * m2[0][c] + m1[r][1] * m2[1][c] + m1[r][2] * m2[2][c] + m1[r][3] * m2[3][c]
+        return mat
+
+    @staticmethod
+    def mat_translation(x, y, z):
+        mat = mat4x4.make_identity()
+        mat[3][0] = x
+        mat[3][1] = y
+        mat[3][2] = z
+        return mat
+
+    @staticmethod
+    def make_proj(fovDeg, aspectRatio, near, far):
+        fovRad = math.radians(fovDeg)
+        mat = mat4x4()
+        mat[0][0] = aspectRatio * fovRad
+        mat[1][1] = fovRad
+        mat[2][2] = far / (far - near)
+        mat[3][2] = (-far * near) / (far - near)
+        mat[2][3] = 1
+        mat[3][3] = 0
+        return mat
+
 

@@ -185,12 +185,9 @@ class p_Ball_3D:
         self.tris = list()
         reader = OBJ_Reader.ObjReader('CenteredCube.obj')
         for t in reader.trios:
-            v1 = t[0]
-            v2 = t[1]
-            v3 = t[2]
-            v1.append(1)
-            v2.append(1)
-            v3.append(1)
+            v1 = vec4(t[0][0], t[0][1], t[0][2], 1)
+            v2 = vec4(t[1][0], t[1][1], t[1][2], 1)
+            v3 = vec4(t[2][0], t[2][1], t[2][2], 1)
             self.tris.append(p_Ball_3D.Triangle([v1, v2, v3]))
 
         self.trans = mat4x4()
@@ -214,17 +211,17 @@ class p_Ball_3D:
 
     def translate(self, x, y, z):
         pass
-'''
+
 class Phyber_3D:
     def __init__(self, bodies):
         self.G = 6.67408 * (10 ** -11)
         self.bodies = bodies
-        #self.proj = p_math_3D.mat4x4.mat_id()
+        self.proj = mat4x4.make_identity()
         self.width = 1
         self.height = 1
 
     def init_graphics(self, width, height, fov, far, near):
-        #self.proj = p_math_3D.mat4x4.mat_proj(fov, height / width, near, far)
+        self.proj = mat4x4.make_proj(fov, height / width, near, far)
         self.width = width
         self.height = height
 
@@ -239,7 +236,7 @@ class Phyber_3D:
     def calc_gravity(self):
         for i in range(len(self.bodies)):
             for n in range(i + 1, len(self.bodies), 1):
-                #distance = p_math_3D.vec_distance(self.bodies[i].position, self.bodies[n].position)
+                distance = vec4.vec_distance(self.bodies[i].position, self.bodies[n].position)
                 if distance != 0:
                     force = self.G * ((self.bodies[i].mass * self.bodies[n].mass) / (distance ** 2))
                 else:
@@ -258,13 +255,13 @@ class Phyber_3D:
         triangles = list()
         for b in self.bodies:
             for tris in b.tris:
-                v1 = p_math_3D.mat4x4.mat_vec_mult(self.proj, tris.verts[0])
-                v2 = p_math_3D.mat4x4.mat_vec_mult(self.proj, tris.verts[1])
-                v3 = p_math_3D.mat4x4.mat_vec_mult(self.proj, tris.verts[2])
+                v1 = self.proj * tris.verts[0]
+                v2 = self.proj * tris.verts[1]
+                v3 = self.proj * tris.verts[2]
 
-                v1 = p_math_3D.vec_mult(v1, 1 / v1[3])
-                v2 = p_math_3D.vec_mult(v2, 1 / v2[3])
-                v3 = p_math_3D.vec_mult(v3, 1 / v3[3])
+                v1 *= (1 / v1[3])
+                v2 *= (1 / v2[3])
+                v3 *= (1 / v3[3])
 
                 v1[0] *= -1
                 v1[1] *= -1
@@ -273,10 +270,10 @@ class Phyber_3D:
                 v3[0] *= -1
                 v3[1] *= -1
 
-                offsetView = (1, 1, 0)
-                v1 = p_math_3D.vec_add(v1, offsetView)
-                v2 = p_math_3D.vec_add(v2, offsetView)
-                v3 = p_math_3D.vec_add(v3, offsetView)
+                offsetView = vec4(1, 1, 0, 0)
+                v1 = v1 + offsetView
+                v2 = v2 + offsetView
+                v3 = v3 + offsetView
                 v1[0] *= 0.5 * self.width
                 v1[1] *= 0.5 * self.height
                 v2[0] *= 0.5 * self.width
@@ -285,7 +282,7 @@ class Phyber_3D:
                 v3[1] *= 0.5 * self.height
 
                 triangles.append([v1[:2], v2[:2], v3[:2]])
-        return triangles'''
+        return triangles
 
 def main():
     b1 = p_Ball_2D(5, 10)

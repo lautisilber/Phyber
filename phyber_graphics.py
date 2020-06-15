@@ -100,7 +100,7 @@ class Simulation_3D:
         #self.engine.calculate_forces(self.deltaTime * self.simSpeed)
         tris = self.engine.to_2D()
         for t in tris:
-            self.draw_triangle((0, 255, 0), tris)
+            self.draw_triangle((0, 255, 0), t)
             
 
     def loop(self):
@@ -120,7 +120,7 @@ class Simulation_3D:
         pygame.quit()
 
 def main():
-    demo3d = False
+    demo3d = True
 
     if not demo3d:
         b1 = phyber_engine.p_Ball_2D(60, 30)
