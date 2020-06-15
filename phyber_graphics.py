@@ -1,8 +1,9 @@
-# Works together with the phyber engine
+# Works together with the Phyber_2D engine
 import pygame
 import phyber_engine
+from phyber_math import vec2, vec4
 
-class Simulation:
+class Simulation_2D:
     def __init__(self, engine, simSpeed, size, fps):
         self.engine = engine
 
@@ -21,7 +22,7 @@ class Simulation:
         self.loop()
 
     def window_title(self):
-        pygame.display.set_caption('Phyber Engine - {} fps'.format(self.clock.get_fps()))
+        pygame.display.set_caption('Phyber_2D Engine - {} fps'.format(self.clock.get_fps()))
 
     def calc_deltaTime(self):
         t = pygame.time.get_ticks()
@@ -68,20 +69,84 @@ class Simulation:
 
         pygame.quit()
 
+class Simulation_3D:
+    def __init__(self, engine, simSpeed, size, fps):
+        self.engine = engine
+
+        self.simSpeed = simSpeed
+
+        self.fps = fps
+        self.deltaTime = 0
+        self.lastTime = 0
+        self.running = True
+
+        pygame.init()
+        self. size = size
+        self.screen = pygame.display.set_mode(self.size)
+        self.clock = pygame.time.Clock()
+
+        self.loop()
+
+    def window_title(self):
+        pygame.display.set_caption('Phyber_3D Engine - {} fps'.format(self.clock.get_fps()))
+
+    def draw_line(self, colour, pos1, pos2, width=5):
+        pygame.draw.line(self.screen, colour, pos1, pos2, width)
+
+    def draw_triangle(self, colour, verts):
+        pygame.draw.polygon(self.screen, colour, verts, 0)
+
+    def draw_bodies(self):
+        #self.engine.calculate_forces(self.deltaTime * self.simSpeed)
+        tris = self.engine.to_2D()
+        for t in tris:
+            self.draw_triangle((0, 255, 0), tris)
+            
+
+    def loop(self):
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+            self.window_title()
+            self.screen.fill((0, 0, 0))
+
+            self.draw_bodies()
+
+            self.deltaTime = self.clock.tick(self.fps)
+            pygame.display.update()
+
+        pygame.quit()
+
 def main():
-    b1 = phyber_engine.p_Ball(60, 30)
-    b1.set_position([100, 20])
-    b1.set_velocity([0.00003, 0.00002])
+    demo3d = False
 
-    b2 = phyber_engine.p_Ball(30, 15)
-    b2.set_position([400, 60])
-    b2.set_velocity([-0.00005, 0])
+    if not demo3d:
+        b1 = phyber_engine.p_Ball_2D(60, 30)
+        b1.set_position(vec2(100, 20))
+        b1.set_velocity(vec2(0.00003, 0.00002))
 
-    b3 = phyber_engine.p_Ball(20, 10)
-    b3.set_position([250, 200])
+        b2 = phyber_engine.p_Ball_2D(30, 15)
+        b2.set_position(vec2(400, 60))
+        b2.set_velocity(vec2(-0.00005, 0))
 
-    phyber = phyber_engine.Phyber([b1, b2, b3], [True, True, False])
-    sim = Simulation(phyber, 250, (600, 400), 30)
+        b3 = phyber_engine.p_Ball_2D(20, 10)
+        b3.set_position(vec2(250, 200))
+
+        phyber = phyber_engine.Phyber_2D([b1, b2, b3], [True, True, False])
+        sim = Simulation_2D(phyber, 250, (600, 400), 30)
+
+    else:
+        b1 = phyber_engine.p_Ball_3D(60, 30)
+        b1.translate(10, 10, 10)
+
+        size = (600, 400)
+        phyber = phyber_engine.Phyber_3D([b1])
+        phyber.init_graphics(size[0], size[1], 90, 100, 0.01)
+        sim = Simulation_3D(phyber, 250, size, 24)
+
+
 
 if __name__ == '__main__':
     main()

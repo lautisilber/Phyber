@@ -1,23 +1,8 @@
-import pygame
+from phyber_math import vec2, vec4
 
-def main():
-    pygame.init()
+v1 = vec4(1, 2, 3, 4)
+v2 = vec4(5, 6, 7, 8)
 
-    screen = pygame.display.set_mode([600, 400])
-    running = True
+v1 *= v2
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        screen.fill((255, 255, 255))
-
-        pygame.draw.circle(screen, (0, 0, 255), (250, 250), 75)
-
-        pygame.display.flip()
-
-    pygame.quit
-
-if __name__ == '__main__':
-    main()
+print(v1)
