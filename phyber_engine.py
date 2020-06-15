@@ -152,14 +152,53 @@ class p_math:
 
     @staticmethod
     def vec_angle_x(v):
-        if v[0] != 0 or v[1] != 0:
-            return math.acos(v[0] / p_math.vec_magnitude(v))
+        mag = p_math.vec_magnitude(v)
+        if mag != 0:
+            return math.acos(v[0] / mag)
         else:
             return 0
 
     @staticmethod
     def cartesian_from_polar(mag, angle):
         return[math.cos(angle) * mag, math.sin(angle) * mag]
+
+class SistDeRef:
+    class simpleBall:
+        def __init__(self, radius, position = [0, 0]):
+            self.radius = radius
+            self.position = position
+
+        def set_pos(self, pos):
+            self.pos = pos
+
+    class simpleLine:
+        def __init__(self, tail, head):
+            self.tail = tail
+            self.head = head
+
+        def translate(self, trans):
+            self.tail = p_math.vec_add(self.tail, trans)
+            self.head = p_math.vec_add(self.head, trans)
+
+    def __init__(self, objects, origin = '0', follow = None):
+        self.objects = objects
+        self.origin = origin
+        self.zeroToCamera = [0, 0]
+
+        if origin == '0':
+            pass
+        elif self.origin == 'p_Ball' or self.origin == 'p_CircleMarker' or self.origin == 'p_LinerMarker':
+            self.follow = follow
+
+        self.p_Balls = list()
+        self.p_CircleMarkers = list()
+        self.p_LineMarkers = list()
+        for o in self.objects:
+            if isinstance(o, p_Ball) or isinstance(o, p_CircleMarker):
+                self.simpleBalls.append(simpleBall())
+
+    def transform(self):
+        pass
 
 class Phyber:
     def __init__(self, bodies, markers):

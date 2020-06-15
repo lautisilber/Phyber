@@ -1,23 +1,24 @@
-import pygame
+class a:
+    def __init__(self, v):
+        self.vv = v
 
-def main():
-    pygame.init()
+class b:
+    def __init__(self, v):
+        self.vv = v
 
-    screen = pygame.display.set_mode([600, 400])
-    running = True
+class c:
+    def __init__(self):
+        self.z = 0
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+c1 = c()
 
-        screen.fill((255, 255, 255))
+a1 = a(c1)
 
-        pygame.draw.circle(screen, (0, 0, 255), (250, 250), 75)
+b1 = b(a1.vv)
 
-        pygame.display.flip()
+print(a1.vv)
+print(b1.vv)
 
-    pygame.quit
-
-if __name__ == '__main__':
-    main()
+a1.vv.z = 2
+print(a1.vv.z)
+print(b1.vv.z)
