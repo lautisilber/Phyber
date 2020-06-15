@@ -29,7 +29,7 @@ class vec2:
 
     def __mul__(self, other):
         if type(other) == type(self):
-            return vec2(self[0] * other[0], self[1] * other[1])
+            return self[0] * other[0] + self[1] * other[1]
         elif type(other) == type(1) or type(other) == type(1.0):
             return vec2(self[0] * other, self[1] * other)
         else:
@@ -115,7 +115,7 @@ class vec4:
 
     def __mul__(self, other):
         if type(other) == type(self):
-            return vec4(self[0] * other[0], self[1] * other[1], self[2] * other[2], self[3] * other[3])
+            return self[0] * other[0] + self[1] * other[1] + self[2] * other[2] + self[3] * other[3]
         elif type(other) == type(1) or type(other) == type(1.0):
             return vec4(self[0] * other, self[1] * other, self[2] * other, self[3] * other)
         else:
@@ -250,5 +250,76 @@ class mat4x4:
         mat[2][3] = 1
         mat[3][3] = 0
         return mat
+
+    @staticmethod
+    def make_rot_x(angleRad):
+        mat = mat4x4()
+        mat[0][0] = 1
+        mat[1][1] = math.cos(angleRad)
+        mat[1][2] = math.sin(angleRad)
+        mat[2][1] = -math.sin(angleRad)
+        mat[2][2] = math.cos(angleRad)
+        mat[3][3] = 1
+        return mat
+
+    @staticmethod
+    def make_rot_y(angleRad):
+        mat = mat4x4()
+        mat[0][0] = math.cos(angleRad)
+        mat[0][2] = math.sin(angleRad)
+        mat[2][0] = -math.sin(angleRad)
+        mat[1][1] = 1
+        mat[2][2] = math.cos(angleRad)
+        mat[3][3] = 1
+        return mat
+
+    @staticmethod
+    def make_rot_z(angleRad):
+        mat = mat4x4()
+        mat[0][0] = math.cos(angleRad)
+        mat[0][1] = math.sin(angleRad)
+        mat[1][0] = -math.sin(angleRad)
+        mat[1][1] = math.cos(angleRad)
+        mat[2][2] = 1
+        mat[3][3] = 1
+        return mat
+
+    @staticmethod
+    def mat_point_at(pos, target, up):
+        assert isinstance(pos, vec4)
+        assert isinstance(target, vec4)
+        assert isinstance(up, vec4)
+
+        newForward = target - pos
+        newForward.normalize()
+
+        a = newForward * (up * newForward)
+        newUp = up - a
+        newUp.normalize()
+
+        newRight = vec4.vec_cross(newUp, newForward)
+
+        mat = mat4x4()
+        mat[0][0] = newRight[0]
+        mat[0][1] = newRight[1]
+        mat[0][2] = newRight[2]
+        mat[0][3] = 0
+        mat[1][0] = newUp[0]
+        mat[1][1] = newUp[1]
+        mat[1][2] = newUp[2]
+        mat[1][3] = 0
+        mat[2][0] = newForward[0]
+        mat[2][1] = newForward[1]
+        mat[2][2] = newForward[2]
+        mat[2][3] = 0
+        mat[3][0] = pos[0]
+        mat[3][1] = pos[1]
+        mat[3][2] = pos[2]
+        mat[3][3] = 1
+
+
+
+
+
 
 

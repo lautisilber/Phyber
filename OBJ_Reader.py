@@ -1,3 +1,5 @@
+import os
+
 class ObjReader:
     def __init__(self, file):
         self.file = file
@@ -8,7 +10,9 @@ class ObjReader:
         self.uvs = list()
         self.normals = list()
 
-        objFile = open(file, 'r')
+        scriptDir = os.path.dirname(__file__)
+        completePath = os.path.join(scriptDir, file)
+        objFile = open(completePath, 'r')
 
         for line in objFile:
             split = line.split()

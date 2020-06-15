@@ -97,13 +97,14 @@ class Simulation_3D:
         pygame.draw.polygon(self.screen, colour, verts, 0)
 
     def draw_bodies(self):
-        #self.engine.calculate_forces(self.deltaTime * self.simSpeed)
+        self.engine.calculate_forces(self.deltaTime * self.simSpeed)
         tris = self.engine.to_2D()
         for t in tris:
             self.draw_triangle((0, 255, 0), t)
             
 
     def loop(self):
+        theta = 0
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -113,6 +114,10 @@ class Simulation_3D:
             self.screen.fill((0, 0, 0))
 
             self.draw_bodies()
+            theta += 0.0005 * self.deltaTime
+            for b in self.engine.bodies:
+                b.set_rotationZ(theta)
+                b.set_rotationX(theta * 0.5)
 
             self.deltaTime = self.clock.tick(self.fps)
             pygame.display.update()
@@ -139,12 +144,15 @@ def main():
 
     else:
         b1 = phyber_engine.p_Ball_3D(60, 30)
-        b1.translate(10, 10, 10)
+        b1.set_translation(1, 1, -5)
+
+        b2 = phyber_engine.p_Ball_3D(60, 30)
+        b2.set_translation(-1, -1, -10)
 
         size = (600, 400)
-        phyber = phyber_engine.Phyber_3D([b1])
+        phyber = phyber_engine.Phyber_3D([b1, b2])
         phyber.init_graphics(size[0], size[1], 90, 100, 0.01)
-        sim = Simulation_3D(phyber, 250, size, 24)
+        sim = Simulation_3D(phyber, 500, size, 24)
 
 
 
