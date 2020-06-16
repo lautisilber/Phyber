@@ -170,10 +170,19 @@ class Phyber_2D:
         #print('({}, {}), ({}, {})'.format(self.linearMomentum[1].vert1[0], self.linearMomentum[1].vert1[1], self.linearMomentum[1].vert2[0], self.linearMomentum[1].vert2[1]))
         print(self.linearMomentum[1].vert2)
 
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+
 class p_Ball_3D:
     class Triangle:
         def __init__(self, verts):
             self.verts = verts
+
+        def check(self):
+            assert len(self.verts)
+            if len(self.verts) == 3:
+                return True
+            else:
+                return False
 
     def __init__(self, mass, radius):
         import OBJ_Reader
@@ -207,14 +216,12 @@ class p_Ball_3D:
 
         self.acceleration = vec4(0, 0, 0, 1)
 
-        trans = self.velocity * deltaTime
-        self.trans = mat4x4.mat_mat_multiply(mat4x4.mat_translation(trans[0], trans[1], trans[2]), self.trans)
-
-    def get_pos(self):
-        return self.trans * self.position
+        self.position += self.velocity * deltaTime
+        self.trans = mat4x4.mat_translation(self.position[0], self.position[1], self.position[2])
 
     def set_translation(self, x, y, z):
-        self.trans = mat4x4.mat_translation(x, y, z)
+        self.position = vec4(x, y, z, 1)
+        self.trans = mat4x4.mat_translation(self.position[0], self.position[1], self.position[2])
 
     def set_rotationX(self, angleRad):
         self.rotX = mat4x4.make_rot_x(angleRad)
@@ -242,7 +249,7 @@ class Phyber_3D:
     def calc_gravity(self):
         for i in range(len(self.bodies)):
             for n in range(i + 1, len(self.bodies), 1):
-                distance = vec4.vec_distance(self.bodies[i].get_pos(), self.bodies[n].position)
+                distance = vec4.vec_distance(self.bodies[i].position, self.bodies[n].position)
                 if distance != 0:
                     force = self.G * ((self.bodies[i].mass * self.bodies[n].mass) / (distance ** 2))
                 else:

@@ -124,10 +124,12 @@ class Renderer_3D:
                 v2 = self.projMat * v2
                 v3 = self.projMat * v3
 
-
-                v1 *= (1 / v1[3])
-                v2 *= (1 / v2[3])
-                v3 *= (1 / v3[3])
+                if (v1[3] != 0):
+                    v1 *= (1 / v1[3])
+                if (v2[3] != 0):
+                    v2 *= (1 / v2[3])
+                if (v3[3] != 0):
+                    v3 *= (1 / v3[3])
 
                 #v1[0] *= -1
                 #v1[1] *= -1
@@ -197,14 +199,16 @@ def demo2d():
 def demo3d():
     b1 = phyber_engine.p_Ball_3D(60, 30)
     b1.set_translation(1, 1, -5)
+    b1.set_velocity(vec4(-0.00005, 0, 0, 1))
 
     b2 = phyber_engine.p_Ball_3D(60, 30)
     b2.set_translation(-1, -1, -10)
+    b2.set_velocity(vec4(0.00005, 0, 0, 1))
 
     size = (600, 400)
     phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D(phyber, 500, size, 8)
+    sim = Renderer_3D(phyber, 8, size, 24)
     sim.set_proj(size[0], size[1], 90, 100, 0.01)
     sim.init()
 
