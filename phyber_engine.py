@@ -103,7 +103,7 @@ class Phyber_2D:
         if self.showData[0]:
             self.massCenter = p_CircleMarker_2D(10, (255, 0, 0), 'mass center')
         if self.showData[1]:
-            for i in range(len(self.bodies) + 1):
+            for _ in range(len(self.bodies) + 1):
                 self.linearMomentum.append(p_LineMarker_2D((255, 255, 0), 3, [0, 0]))
 
     def calculate_forces(self, deltaTime):
@@ -229,15 +229,8 @@ class Phyber_3D:
     def __init__(self, bodies):
         self.G = 6.67408 * (10 ** -11)
         self.bodies = bodies
-        self.proj = mat4x4.make_identity()
         self.width = 1
         self.height = 1
-
-    def init_graphics(self, width, height, fov, far, near):
-        self.proj = mat4x4.make_proj(fov, height / width, near, far)
-        self.width = width
-        self.height = height
-
 
     def calculate_forces(self, deltaTime):
         # gravity
@@ -259,52 +252,6 @@ class Phyber_3D:
                 unionVec = vec4.vec_from_points(self.bodies[i].position, self.bodies[n].position)
                 self.bodies[i].acceleration += (unionVec * force) * (1 / self.bodies[i].mass)
                 self.bodies[n].acceleration += (unionVec * force) * (-1 / self.bodies[n].mass)
-
-    def to_2D(self):
-        triangles = list()
-        for b in self.bodies:
-            for tris in b.tris:
-                v1 = b.rotZ * tris.verts[0]
-                v2 = b.rotZ * tris.verts[1]
-                v3 = b.rotZ * tris.verts[2]
-
-                v1 = b.rotX * v1
-                v2 = b.rotX * v2
-                v3 = b.rotX * v3
-
-                v1 = b.trans * v1
-                v2 = b.trans * v2
-                v3 = b.trans * v3
-
-                v1 = self.proj * v1
-                v2 = self.proj * v2
-                v3 = self.proj * v3
-
-
-                v1 *= (1 / v1[3])
-                v2 *= (1 / v2[3])
-                v3 *= (1 / v3[3])
-
-                #v1[0] *= -1
-                #v1[1] *= -1
-                #v2[0] *= -1
-                #v2[1] *= -1
-                #v3[0] *= -1
-                #v3[1] *= -1
-
-                offsetView = vec4(1, 1, 0, 0)
-                v1 = v1 + offsetView
-                v2 = v2 + offsetView
-                v3 = v3 + offsetView
-                v1[0] *= 0.5 * self.width
-                v1[1] *= 0.5 * self.height
-                v2[0] *= 0.5 * self.width
-                v2[1] *= 0.5 * self.height
-                v3[0] *= 0.5 * self.width
-                v3[1] *= 0.5 * self.height
-
-                triangles.append([v1[:2], v2[:2], v3[:2]])
-        return triangles
 
 def main():
     b1 = p_Ball_2D(5, 10)
