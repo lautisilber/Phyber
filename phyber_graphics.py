@@ -77,9 +77,8 @@ class Renderer_3D:
         self.simSpeed = simSpeed
 
         self.projMat = mat4x4.make_identity()
-        self.lightDirection = vec4(-1, 0, 0, 0)
-        self.lightDirection.normalize()
-        self.camera = vec4(1, 0, 0, 0)
+        self.lightSource = vec4(0, 0, 10, 0)
+        self.camera = vec4(0, 0, 0, 0)
 
         self.fps = fps
         self.deltaTime = 0
@@ -96,8 +95,8 @@ class Renderer_3D:
         self.width = width
         self.height = height
 
-    def set_light_dir(self, x, y, z):
-        self.lightDirection = vec4(x, y, z, 1)
+    def set_light_source(self, x, y, z):
+        self.lightSource = vec4(x, y, z, 1)
 
     def init(self):
         self.loop()
@@ -109,11 +108,10 @@ class Renderer_3D:
         pygame.draw.line(self.screen, colour, pos1, pos2, width)
 
     def draw_triangle(self, colour, verts, lum):
-        col = self.get_lum_value(lum)
-        pygame.draw.polygon(self.screen, col, verts, 0)
+        pygame.draw.polygon(self.screen, lum, verts, 0)
 
     def get_lum_value(self, angle):
-        val = 255 * angle * math.pi
+        val = 255 * angle
         if val < 0:
             val = 0
         return (val, val, val)
@@ -137,14 +135,16 @@ class Renderer_3D:
                 u1 = v2 - v1
                 u2 = v3 - v1
                 normal = vec4.vec_cross(u1, u2)
-                normal.normalize()
+                normal[3] = 0
+                normal = normal.normalized()
 
-                if (normal[0] * (v1[0] - self.camera[0]) + normal[1] * (v1[1] - self.camera[1]) + normal[2] * (v1[2] - self.camera[2])):
+                if (vec4.dot_product_3d(normal, v1 - self.camera) < 0):
 
                     #calculate lighting
-                    lightDir = self.lightDirection
-                    #lum = (lightDir[0] * normal[0] + lightDir[1] * normal[1] + lightDir[2] * normal[2]) 
-                    lum = lightDir * normal
+                    lightDir = self.lightSource - v1
+                    lightDir[3] = 0
+                    lightDir = lightDir.normalized()
+                    lum = vec4.dot_product_3d(normal, lightDir)
 
                     v1 = self.projMat * v1
                     v2 = self.projMat * v2
@@ -175,7 +175,7 @@ class Renderer_3D:
                     v3[0] *= 0.5 * self.width
                     v3[1] *= 0.5 * self.height
 
-                    triangles.append([v1[:2], v2[:2], v3[:2], lum])
+                    triangles.append([v1[:2], v2[:2], v3[:2], self.get_lum_value(lum)])
         return triangles
 
     def draw_bodies(self):

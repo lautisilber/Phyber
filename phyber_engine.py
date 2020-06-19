@@ -177,7 +177,7 @@ class p_Ball_3D:
         def __init__(self, verts, normal = [0, 0, 0]):
             self.verts = verts
             self.normal = vec4(normal[0], normal[1], normal[2], 1)
-            self.normal.normalize()
+            self.normal = self.normal.normalized()
 
         def check(self):
             assert len(self.verts)

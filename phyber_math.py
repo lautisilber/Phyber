@@ -147,8 +147,8 @@ class vec4:
     def magnitude(self):
         return math.sqrt((self[0] ** 2) + (self[1] ** 2) + (self[2] ** 2) + (self[3] ** 2))
 
-    def normalize(self):
-        self = self * (1 / self.magnitude())
+    def normalized(self):
+        return self * (1 / self.magnitude())
 
     @staticmethod
     def vec_from_points(v1, v2):
@@ -166,6 +166,10 @@ class vec4:
     def vec_cross(v1, v2):
         # 3D
         return vec4((v1[1] * v2[2]) - (v1[2] * v2[1]), (v1[2] * v2[0]) - (v1[0] * v2[2]), (v1[0] * v2[1]) - (v1[1] * v2[0]), 1)
+
+    @staticmethod
+    def dot_product_3d(v1, v2):
+        return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
 
 class mat4x4:
     def __init__(self):
