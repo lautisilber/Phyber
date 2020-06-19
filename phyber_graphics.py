@@ -1,5 +1,6 @@
 # Works together with the Phyber_2D engine
 import math
+from statistics import mean
 import pygame
 import phyber_engine
 from phyber_math import vec2, vec4, mat4x4
@@ -77,7 +78,7 @@ class Renderer_3D:
         self.simSpeed = simSpeed
 
         self.projMat = mat4x4.make_identity()
-        self.lightSource = vec4(0, 0, 10, 0)
+        self.lightSource = vec4(5, 5, 10, 0)
         self.camera = vec4(0, 0, 0, 0)
 
         self.fps = fps
@@ -175,7 +176,8 @@ class Renderer_3D:
                     v3[0] *= 0.5 * self.width
                     v3[1] *= 0.5 * self.height
 
-                    triangles.append([v1[:2], v2[:2], v3[:2], self.get_lum_value(lum)])
+                    triangles.append([v1[:2], v2[:2], v3[:2], self.get_lum_value(lum), mean([v1[2], v2[2], v3[2]])])
+        triangles = sorted(triangles, reverse=False, key=lambda t: t[4])
         return triangles
 
     def draw_bodies(self):
@@ -238,7 +240,7 @@ def demo3d():
     size = (600, 400)
     phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D(phyber, 16, size, 24)
+    sim = Renderer_3D(phyber, 16, size, 60)
     sim.set_proj(size[0], size[1], 90, 100, 0.01)
     sim.init()
 
