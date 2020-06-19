@@ -204,6 +204,8 @@ class p_Ball_3D:
         self.rotX = mat4x4.make_identity()
         self.rotY = mat4x4.make_identity()
         self.rotZ = mat4x4.make_identity()
+        self.scale = radius / 10
+        self.apply_scale()
 
     def set_velocity(self, vel):
         self.velocity = vel
@@ -231,6 +233,11 @@ class p_Ball_3D:
 
     def set_rotationZ(self, angleRad):
         self.rotZ = mat4x4.make_rot_z(angleRad)
+
+    def apply_scale(self):
+        for i in range(len(self.tris)):
+            for n in range(len(self.tris[i].verts)):
+                self.tris[i].verts[n] = self.scale * self.tris[i].verts[n]
 
 class Phyber_3D:
     def __init__(self, bodies):

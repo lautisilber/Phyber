@@ -197,18 +197,22 @@ def demo2d():
     sim = Renderer_2D(phyber, 250, (600, 400), 30)
 
 def demo3d():
-    b1 = phyber_engine.p_Ball_3D(60, 30)
-    b1.set_translation(1, 1, -5)
+    b1 = phyber_engine.p_Ball_3D(60, 6)
+    b1.set_translation(1, 0, -5)
     b1.set_velocity(vec4(-0.00005, 0, 0, 1))
 
-    b2 = phyber_engine.p_Ball_3D(60, 30)
-    b2.set_translation(-1, -1, -10)
+    b2 = phyber_engine.p_Ball_3D(60, 6)
+    b2.set_translation(-1, -2, -10)
     b2.set_velocity(vec4(0.00005, 0, 0, 1))
+
+    b3 = phyber_engine.p_Ball_3D(30, 3)
+    b3.set_translation(-2, -1, -7)
+    b3.set_velocity(vec4(0.00001, 0, 0, 1))
 
     size = (600, 400)
     phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D(phyber, 8, size, 24)
+    sim = Renderer_3D(phyber, 16, size, 24)
     sim.set_proj(size[0], size[1], 90, 100, 0.01)
     sim.init()
 
