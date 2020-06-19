@@ -174,8 +174,10 @@ class Phyber_2D:
 
 class p_Ball_3D:
     class Triangle:
-        def __init__(self, verts):
+        def __init__(self, verts, normal = [0, 0, 0]):
             self.verts = verts
+            self.normal = vec4(normal[0], normal[1], normal[2], 1)
+            self.normal.normalize()
 
         def check(self):
             assert len(self.verts)
@@ -194,11 +196,11 @@ class p_Ball_3D:
         self.position = vec4(0, 0, 0, 1)
         self.tris = list()
         reader = OBJ_Reader.ObjReader('Sphere.obj')
-        for t in reader.trios:
+        for t in reader.triangles:
             v1 = vec4(t[0][0], t[0][1], t[0][2], 1)
             v2 = vec4(t[1][0], t[1][1], t[1][2], 1)
             v3 = vec4(t[2][0], t[2][1], t[2][2], 1)
-            self.tris.append(p_Ball_3D.Triangle([v1, v2, v3]))
+            self.tris.append(p_Ball_3D.Triangle([v1, v2, v3], t[3]))
 
         self.trans = mat4x4.make_identity()
         self.rotX = mat4x4.make_identity()

@@ -165,8 +165,6 @@ class vec4:
     @staticmethod
     def vec_cross(v1, v2):
         # 3D
-        v1.append(0)
-        v2.append(0)
         return vec4((v1[1] * v2[2]) - (v1[2] * v2[1]), (v1[2] * v2[0]) - (v1[0] * v2[2]), (v1[0] * v2[1]) - (v1[1] * v2[0]), 1)
 
 class mat4x4:

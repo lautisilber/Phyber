@@ -1,4 +1,5 @@
 # Works together with the Phyber_2D engine
+import math
 import pygame
 import phyber_engine
 from phyber_math import vec2, vec4, mat4x4
@@ -76,6 +77,9 @@ class Renderer_3D:
         self.simSpeed = simSpeed
 
         self.projMat = mat4x4.make_identity()
+        self.lightDirection = vec4(-1, 0, 0, 0)
+        self.lightDirection.normalize()
+        self.camera = vec4(1, 0, 0, 0)
 
         self.fps = fps
         self.deltaTime = 0
@@ -92,6 +96,9 @@ class Renderer_3D:
         self.width = width
         self.height = height
 
+    def set_light_dir(self, x, y, z):
+        self.lightDirection = vec4(x, y, z, 1)
+
     def init(self):
         self.loop()
 
@@ -101,8 +108,15 @@ class Renderer_3D:
     def draw_line(self, colour, pos1, pos2, width=5):
         pygame.draw.line(self.screen, colour, pos1, pos2, width)
 
-    def draw_triangle(self, colour, verts):
-        pygame.draw.polygon(self.screen, colour, verts, 0)
+    def draw_triangle(self, colour, verts, lum):
+        col = self.get_lum_value(lum)
+        pygame.draw.polygon(self.screen, col, verts, 0)
+
+    def get_lum_value(self, angle):
+        val = 255 * angle * math.pi
+        if val < 0:
+            val = 0
+        return (val, val, val)
 
     def to_2D(self, bodies):
         triangles = list()
@@ -120,43 +134,55 @@ class Renderer_3D:
                 v2 = b.trans * v2
                 v3 = b.trans * v3
 
-                v1 = self.projMat * v1
-                v2 = self.projMat * v2
-                v3 = self.projMat * v3
+                u1 = v2 - v1
+                u2 = v3 - v1
+                normal = vec4.vec_cross(u1, u2)
+                normal.normalize()
 
-                if (v1[3] != 0):
-                    v1 *= (1 / v1[3])
-                if (v2[3] != 0):
-                    v2 *= (1 / v2[3])
-                if (v3[3] != 0):
-                    v3 *= (1 / v3[3])
+                if (normal[0] * (v1[0] - self.camera[0]) + normal[1] * (v1[1] - self.camera[1]) + normal[2] * (v1[2] - self.camera[2])):
 
-                #v1[0] *= -1
-                #v1[1] *= -1
-                #v2[0] *= -1
-                #v2[1] *= -1
-                #v3[0] *= -1
-                #v3[1] *= -1
+                    #calculate lighting
+                    lightDir = self.lightDirection
+                    #lum = (lightDir[0] * normal[0] + lightDir[1] * normal[1] + lightDir[2] * normal[2]) 
+                    lum = lightDir * normal
 
-                offsetView = vec4(1, 1, 0, 0)
-                v1 = v1 + offsetView
-                v2 = v2 + offsetView
-                v3 = v3 + offsetView
-                v1[0] *= 0.5 * self.width
-                v1[1] *= 0.5 * self.height
-                v2[0] *= 0.5 * self.width
-                v2[1] *= 0.5 * self.height
-                v3[0] *= 0.5 * self.width
-                v3[1] *= 0.5 * self.height
+                    v1 = self.projMat * v1
+                    v2 = self.projMat * v2
+                    v3 = self.projMat * v3
 
-                triangles.append([v1[:2], v2[:2], v3[:2]])
+                    if (v1[3] != 0):
+                        v1 *= (1 / v1[3])
+                    if (v2[3] != 0):
+                        v2 *= (1 / v2[3])
+                    if (v3[3] != 0):
+                        v3 *= (1 / v3[3])
+
+                    #v1[0] *= -1
+                    #v1[1] *= -1
+                    #v2[0] *= -1
+                    #v2[1] *= -1
+                    #v3[0] *= -1
+                    #v3[1] *= -1
+
+                    offsetView = vec4(1, 1, 0, 0)
+                    v1 = v1 + offsetView
+                    v2 = v2 + offsetView
+                    v3 = v3 + offsetView
+                    v1[0] *= 0.5 * self.width
+                    v1[1] *= 0.5 * self.height
+                    v2[0] *= 0.5 * self.width
+                    v2[1] *= 0.5 * self.height
+                    v3[0] *= 0.5 * self.width
+                    v3[1] *= 0.5 * self.height
+
+                    triangles.append([v1[:2], v2[:2], v3[:2], lum])
         return triangles
 
     def draw_bodies(self):
         self.engine.calculate_forces(self.deltaTime * self.simSpeed)
         tris = self.to_2D(self.engine.bodies)
         for t in tris:
-            self.draw_triangle((0, 255, 0), t)  
+            self.draw_triangle((0, 255, 0), [t[0], t[1], t[2]], t[3])  
 
     def loop(self):
         theta = 0

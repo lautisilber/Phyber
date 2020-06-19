@@ -33,7 +33,7 @@ class ObjReader:
                     self.normals.append(self.normalList[int(s[2])-1])
         objFile.close()
 
-        self.trios = list()
+        self.triangles = list()
         for i in range(0, len(self.vertices), 3):
-            self.trios.append([self.vertices[i], self.vertices[i + 1], self.vertices[i + 2]])
+            self.triangles.append([self.vertices[i], self.vertices[i + 1], self.vertices[i + 2], self.normals[i]])
 
