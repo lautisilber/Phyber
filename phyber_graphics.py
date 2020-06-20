@@ -142,7 +142,7 @@ class Renderer_3D:
                 if (vec4.dot_product_3d(normal, v1 - self.camera) < 0):
 
                     #calculate lighting
-                    lightDir = self.lightSource - v1
+                    lightDir = self.lightSource - ((((v3 - v2) * (1 / 2)) - v1) * (1 / 2))
                     lightDir[3] = 0
                     lightDir = lightDir.normalized()
                     lum = vec4.dot_product_3d(normal, lightDir)
