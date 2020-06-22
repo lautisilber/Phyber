@@ -1,13 +1,44 @@
-from phyber_math import vec2, vec4, mat4x4
+from PIL import Image
+import numpy as np
 
-identity = mat4x4.make_identity()
-identity2 = mat4x4.make_identity()
+frameBuffer = np.zeros((400, 400, 3), dtype=np.uint8)
 
-identity = mat4x4.mat_mat_multiply(identity, identity2)
+def draw(x, y, col):
+    assert len(col) = 3
+    if x >= 0 and y >= 0 and x < 400 and y < 400:
+        frameBuffer[y][x] = col
 
-print(identity)
+def draw_line(pos1, pos2, col):
+    dx = pos2[0] - pos1[0]
+    dy = pos2[1] - pos1[1]
+    dx1 = abs(dx)
+    dy1 = abs(dy)
+    px = 2 * dy1 - dx1
+    py = 2 * dx1 - dy1
+    if dy1 <= dx1:
+        if dx >= 0:
+            x = x1
+            y = y1
+            xe = x2
+        else:
+            x = x2
+            y = y2
+            xe = x1
 
-identity = identity * 2
-v1 = vec4(20, 6, 54, -90)
+        draw(x, y, col)
 
-print(identity * v1)
+        for i in range(xe):
+            x += 1
+            if px < 0:
+                px += 2 * dy1
+            else:
+                if (dx < 0 and dy < 0) or (dx > 0 and dy > 0):
+                    y += 1
+                else:
+                    y -= 1
+                px += 2 * (dy1 - dx1)
+            draw(x, y, col)
+
+
+def fill_triangle(verts, col):
+

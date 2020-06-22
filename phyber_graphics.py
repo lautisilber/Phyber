@@ -5,8 +5,9 @@ import pygame
 import phyber_engine
 from phyber_math import vec2, vec4, mat4x4
 
-class Renderer_2D:
+class Renderer_2D_runtime:
     def __init__(self, engine, simSpeed, size, fps):
+        import pygame
         self.engine = engine
 
         self.simSpeed = simSpeed
@@ -71,8 +72,9 @@ class Renderer_2D:
 
         pygame.quit()
 
-class Renderer_3D:
+class Renderer_3D_runtime:
     def __init__(self, engine, simSpeed, size, fps):
+        import pygame
         self.engine = engine
 
         self.simSpeed = simSpeed
@@ -207,6 +209,34 @@ class Renderer_3D:
 
         pygame.quit()
 
+class Render_3D_Offline:
+    def __init__(self, engine, size, simSpeed, fps, seconds):
+        from PIL import Image
+        import numpy as np
+        self.engine = engine
+        self.simSpeed = simSpeed
+        self.loops = seconds * fps
+
+        self.projMat = mat4x4.make_identity()
+        self.lightSource = vec4(5, 5, 10, 0)
+        self.camera = vec4(0, 0, 0, 0)
+
+        self.fps = fps
+        self.deltaTime = 0
+        self.size = size
+        self.frameBuffer = np.zeros((size[0], size[1], 3), dtype=np.uint8)
+
+    def set_proj(self, fov, far, near):
+        self.projMat = mat4x4.make_proj(fov, self.size[1]/self.size[0], near, far)
+
+    def render(self):
+        pass
+
+    def fill_triangle(self, colour, verts, lum):
+
+
+
+
 # --------------------------------------------------------------------------- #
 
 def demo2d():
@@ -222,7 +252,7 @@ def demo2d():
     b3.set_position(vec2(250, 200))
 
     phyber = phyber_engine.Phyber_2D([b1, b2, b3], [True, True, False])
-    sim = Renderer_2D(phyber, 250, (600, 400), 30)
+    sim = Renderer_2D_runtime(phyber, 250, (600, 400), 30)
 
 def demo3d():
     b1 = phyber_engine.p_Ball_3D(60, 6)
@@ -240,7 +270,7 @@ def demo3d():
     size = (600, 400)
     phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D(phyber, 16, size, 60)
+    sim = Renderer_3D_runtime(phyber, 16, size, 60)
     sim.set_proj(size[0], size[1], 90, 100, 0.01)
     sim.init()
 
