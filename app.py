@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 
-size = (400, 400)
+size = (1000, 1000)
 frameBuffer = np.zeros((size[0], size[1], 3), dtype=np.uint8)
 
 def draw(x, y, col):
@@ -153,49 +153,37 @@ def fill_triangle(verts, col):
     tempBuffer = np.zeros((size[0], size[1]), dtype=np.bool)
     draw_triangle_buffered(verts, tempBuffer)
 
-    rasterBegin = 0
-    rasterStart = -1
-    rasterEnd = -1
-    for c in range(size[0]):
-        for n in range(len(tempBuffer[c])):
-            if tempBuffer[c][n]:
-                if rasterBegin == 0:
-                    rasterStart = n
-                    rasterBegin = 1
-                elif rasterBegin == 1:
-                    rasterEnd = n
-                    rasterBegin = 2
-        if rasterEnd < 0:
-            frameBuffer[c][rasterStart] = col
+    for r in range(size[1]):
+        raster = False
+        left = -1
+        right = -1
+        for i in range(len(tempBuffer[r])):
+            if tempBuffer[r][i] == True:
+                left = i
+                break
+        for i in range(len(tempBuffer) - 1, -1, -1):
+            if tempBuffer[r][i] == True:
+                right = i
+                break
+        if left == -1:
+            pass
         else:
-            for i in range(rasterEnd - rasterStart):
-                frameBuffer[c][i + rasterStart] = col
-        rasterBegin = 0
-        rasterStart = -1
-        rasterEnd = -1
-
-def draw_from_bool(buffer):
-    for col in range(size[0]):
-        for row in range(size[1]):
-            if buffer[col][row]:
-                frameBuffer[col][row] = [255, 255, 255]
+            if right == -1:
+                frameBuffer[r][left] = col
             else:
-                frameBuffer[col][row] = [0, 0, 0]
-
-def check(temp, frame):
-    for col in range(size[0]):
-        for row in range(size[1]):
-            if (temp[col][row] and frame[col][row] != [255, 255, 255]) or (not temp[col][row] and frame[col][row] != [0, 0, 0]):
-                 print(frame[col][row])
+                for i in range(left, right + 1):
+                    frameBuffer[r][i] = col
+        
 
 def save_image():
-    vert1 = [150, 150]
-    vert2 = [200, 250]
-    vert3 = [100, 250]
+    vert1 = [500, 200]
+    vert2 = [300, 400]
+    vert3 = [700, 400]
     verts = [vert1, vert2, vert3]
     #draw_triangle(verts, [255, 255, 255])
     fill_triangle(verts, [255, 255, 255])
-    img = Image.fromarray(frameBuffer)
-    img.save('test.jpg')
+    img = Image.fromarray(frameBuffer, 'RGB')
+    img.save('test_pil.png')
+
 
 save_image()
