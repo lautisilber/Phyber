@@ -1,8 +1,8 @@
 from PIL import Image
 import numpy as np
 
-size = (1000, 1000)
-frameBuffer = np.zeros((size[0], size[1], 3), dtype=np.uint8)
+size = (1000, 800)
+frameBuffer = np.zeros((size[1], size[0], 3), dtype=np.uint8)
 
 def draw(x, y, col):
     assert len(col) == 3
@@ -161,7 +161,7 @@ def fill_triangle(verts, col):
             if tempBuffer[r][i] == True:
                 left = i
                 break
-        for i in range(len(tempBuffer) - 1, -1, -1):
+        for i in range(len(tempBuffer[r]) - 1, -1, -1):
             if tempBuffer[r][i] == True:
                 right = i
                 break

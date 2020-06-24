@@ -1,13 +1,20 @@
 # Works together with the Phyber_2D engine
-import math
+import math, os
 from statistics import mean
 import pygame
+from PIL import Image
+import numpy as np
+tqdmInstalled = False
+try:
+    from tqdm import tqdm
+    tqdmInstalled = True
+except:
+    tqdmInstalled = False
 import phyber_engine
 from phyber_math import vec2, vec4, mat4x4
 
 class Renderer_2D_runtime:
     def __init__(self, engine, simSpeed, size, fps):
-        import pygame
         self.engine = engine
 
         self.simSpeed = simSpeed
@@ -210,42 +217,141 @@ class Renderer_3D_runtime:
         pygame.quit()
 
 class Renderer_3D_Offline:
-    def __init__(self, engine, size, simSpeed, fps, seconds):
-        from PIL import Image
-        import numpy as np
-        import os
-
-        self.path = os.path.dirname(os.path.abspath(__file__))
-
+    def __init__(self, engine, simSpeed, size, fps, seconds):
         self.engine = engine
+
         self.simSpeed = simSpeed
-        self.loops = seconds * fps
+        self.fps = fps
+        self.iterations = seconds * self.fps
+        self.deltaTime = 1 / self.fps
+
+        self.size = size
 
         self.projMat = mat4x4.make_identity()
         self.lightSource = vec4(5, 5, 10, 0)
         self.camera = vec4(0, 0, 0, 0)
 
-        self.fps = fps
-        self.deltaTime = 0
-        self.size = size
-        self.frameBuffer = np.zeros((self.size[1], self.size[0], 3), dtype=np.float32)
-        self.tempBuffer = np.zeros((self.size[1], self.size[0]), dtype=np.bool)
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.tempPath = os.path.join(self.path, 'temp')
+
+        self.frameBuffer = np.zeros((self.size[1], self.size[0], 3), dtype=np.uint8)
 
     def set_proj(self, fov, near, far):
-        self.projMat = mat4x4.make_proj(fov, self.size[1]/self.size[0], near, far)
+        self.projMat = mat4x4.make_proj(fov, self.size[1] / self.size[0], near, far)
 
-    def reset_temp_buffer(self):
-        import numpy as np
-        self.tempBuffer = np.zeros((self.size[1], self.size[0]), dtype=np.bool)
+    def set_light_source(self, x, y, z):
+        self.lightSource = vec4(x, y, z, 1)
 
-    def reset_frame_buffer(self):
-        import numpy as np
-        self.frameBuffer = np.zeros((self.size[1], self.size[0], 3), dtype=np.float32)
+    def reser_frame_buffer(self):
+        self.frameBuffer = np.zeros((self.size[1], self.size[0], 3), dtype=np.uint8)
+
+    def fill_triangle(self, verts, col):
+        assert len(verts) == 3
+        for v in verts:
+            assert len(v) == 2
+        
+        tempBuffer = np.zeros((self.size[1], self.size[0]), dtype=np.bool)
+
+        def draw_buffered(xf, yf):
+            x = int(xf)
+            y = int(yf)
+            if x >= 0 and y >= 0 and x < self.size[0] and y < self.size[1]:
+                tempBuffer[y][x] = True
+
+        def draw_line_buffered(pos1, pos2):
+            # borrowed from javidx's olcConsoleGameEngine
+            x1 = pos1[0]
+            y1 = pos1[1]
+            x2 = pos2[0]
+            y2 = pos2[1]
+
+            dx = x2 - x1
+            dy = y2 - y1
+            dx1 = abs(dx)
+            dy1 = abs(dy)
+            px = 2 * dy1 - dx1
+            py = 2 * dx1 - dy1
+
+            if dy1 <= dx1:
+                if dx >= 0:
+                    x = x1
+                    y = y1
+                    xe = x2
+                else:
+                    x = x2
+                    y = y2
+                    xe = x1
+
+                draw_buffered(x, y)
+
+                while x < xe:
+                    x += 1
+                    if px < 0:
+                        px += 2 * dy1
+                    else:
+                        if (dx < 0 and dy < 0) or (dx > 0 and dy > 0):
+                            y += 1
+                        else:
+                            y -= 1
+                        px += 2 * (dy1 - dx1)
+                    draw_buffered(x, y)
+
+            else:
+                if dy >= 0:
+                    x = x1
+                    y = y1
+                    ye = y2
+                else:
+                    x = x2
+                    y = y2
+                    ye = y1
+
+                draw_buffered(x, y)
+
+                while y < ye:
+                    y += 1
+                    if py <= 0:
+                        py += 2 * dx1
+                    else:
+                        if (dx < 0 and dy < 0) or (dx > 0 and dy > 0):
+                            x += 1
+                        else:
+                            x -= 1
+                        py += 2 * (dx1 - dy1)
+                    draw_buffered(x, y)
+
+        def draw_triangle_buffered(verts):
+            draw_line_buffered(verts[0], verts[1])
+            draw_line_buffered(verts[1], verts[2])
+            draw_line_buffered(verts[2], verts[0])
+
+        draw_triangle_buffered(verts)
+
+        for r in range(self.size[1]):
+            left = -1
+            right = -1
+            for i in range(len(tempBuffer[r])):
+                if tempBuffer[r][i]:
+                    left = i
+                    break
+            for i in range(len(tempBuffer[r]) - 1, -1, -1):
+                if tempBuffer[r][i]:
+                    right = i
+                    break
+            if left == -1:
+                pass
+            else:
+                if right == -1:
+                    self.frameBuffer[r][left] = col
+                else:
+                    for i in range(left, right + 1):
+                        self.frameBuffer[r][i] = col
 
     def get_lum_value(self, angle):
         val = 255 * angle
         if val < 0:
             val = 0
+        val = int(val)
         return (val, val, val)
 
     def to_2D(self, bodies):
@@ -311,124 +417,27 @@ class Renderer_3D_Offline:
         triangles = sorted(triangles, reverse=False, key=lambda t: t[4])
         return triangles
 
-    def draw_bodies(self, split):
-        self.engine.calculate_forces(split * self.simSpeed)
-        tris = self.to_2D(self.engine.bodies)
-        for t in tris:
-            self.fill_triangle([t[0], t[1], t[2]], t[3]) 
-
-    def draw_buffered(self, x, y):
-        if x >= 0 and y >= 0 and x < self.size[0] and y < self.size[1]:
-            self.tempBuffer[y][x] = True
-
-    def draw_line_buffered(self, pos1, pos2):
-        # borrowed from javidx's olcConsoleGameEngine
-        x1 = int(pos1[0])
-        y1 = int(pos1[1])
-        x2 = int(pos2[0])
-        y2 = int(pos2[1])
-
-        dx = x2 - x1
-        dy = y2 - y1
-        dx1 = abs(dx)
-        dy1 = abs(dy)
-        px = 2 * dy1 - dx1
-        py = 2 * dx1 - dy1
-
-        if dy1 <= dx1:
-            if dx >= 0:
-                x = x1
-                y = y1
-                xe = x2
-            else:
-                x = x2
-                y = y2
-                xe = x1
-
-            self.draw_buffered(x, y)
-
-            while x < xe:
-                x += 1
-                if px < 0:
-                    px += 2 * dy1
-                else:
-                    if (dx < 0 and dy < 0) or (dx > 0 and dy > 0):
-                        y += 1
-                    else:
-                        y -= 1
-                    px += 2 * (dy1 - dx1)
-                self.draw_buffered(x, y)
-
-        else:
-            if dy >= 0:
-                x = x1
-                y = y1
-                ye = y2
-            else:
-                x = x2
-                y = y2
-                ye = y1
-
-            self.draw_buffered(x, y)
-
-            while y < ye:
-                y += 1
-                if py <= 0:
-                    py += 2 * dx1
-                else:
-                    if (dx < 0 and dy < 0) or (dx > 0 and dy > 0):
-                        x += 1
-                    else:
-                        x -= 1
-                    py += 2 * (dx1 - dy1)
-                self.draw_buffered(x, y)
-
-    def draw_triangle_buffered(self, verts):
-        assert len(verts) == 3
-        self.draw_line_buffered(verts[0], verts[1])
-        self.draw_line_buffered(verts[1], verts[2])
-        self.draw_line_buffered(verts[2], verts[0])
-
-    def fill_triangle(self, verts, col):
-        self.reset_temp_buffer()
-        self.draw_triangle_buffered(verts)
-
-        for r in range(self.size[1]):
-            left = -1
-            right = -1
-            for i in range(len(self.tempBuffer[r])):
-                if self.tempBuffer[r][i] == True:
-                    left = i
-                    break
-            for i in range(len(self.tempBuffer[r]) - 1, -1, -1):
-                if self.tempBuffer[r][i] == True:
-                    right = i
-                    break
-            if left == -1:
-                pass
-            else:
-                if right == -1:
-                    self.frameBuffer[r][left] = col
-                else:
-                    for i in range(left, right + 1):
-                        self.frameBuffer[r][i] = col
-
     def render(self):
-        import os
-        from PIL import Image
-
-        if not os.path.exists(os.path.join(self.path, 'temp')):
-            os.mkdir(os.path.join(self.path, 'temp'))
-
-        temp = os.path.join(self.path, 'temp')
-        split = 1 / self.fps
-
-        for i in range(self.loops):
-            self.draw_bodies(split)
-            img = Image.fromarray(self.frameBuffer, 'RGB')
-            img.save(os.path.join(temp, str(i) + '.png'))
-            self.reset_frame_buffer()
-
+        if not os.path.exists(self.tempPath):
+            os.mkdir(self.tempPath)
+        if tqdmInstalled:
+            for i in tqdm(range(self.iterations)):
+                self.engine.calculate_forces(self.deltaTime * self.simSpeed * i)
+                tris = self.to_2D(self.engine.bodies)
+                for t in tris:
+                    self.fill_triangle(t[:3], t[3])
+                img = Image.fromarray(self.frameBuffer, 'RGB')
+                img.save(os.path.join(self.tempPath, str(i) + '.png'))
+                self.reser_frame_buffer()
+        else:
+            for i in range(self.iterations):
+                self.engine.calculate_forces(self.deltaTime * self.simSpeed * i)
+                tris = self.to_2D(self.engine.bodies)
+                for t in tris:
+                    self.fill_triangle(t[:3], t[3])
+                img = Image.fromarray(self.frameBuffer, 'RGB')
+                img.save(os.path.join(self.tempPath, str(i) + '.png'))
+                self.reser_frame_buffer()
 
 
 
@@ -463,7 +472,7 @@ def demo3d():
     b3.set_velocity(vec4(0.00001, 0, 0, 1))
 
     size = (600, 400)
-    phyber = phyber_engine.Phyber_3D([b1, b2, b3])
+    phyber = phyber_engine.Phyber_3D([b1, b2])
 
     sim = Renderer_3D_runtime(phyber, 16, size, 60)
     sim.set_proj(size[0], size[1], 90, 100, 0.01)
@@ -483,9 +492,9 @@ def demo3dOffline():
     b3.set_velocity(vec4(0.00001, 0, 0, 1))
 
     size = (600, 400)
-    phyber = phyber_engine.Phyber_3D([b1, b2, b3])
+    phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D_Offline(phyber, size, 16, 60, 10)
+    sim = Renderer_3D_Offline(phyber, 20, size, 15, 4)
     sim.set_proj(90, 0.01, 100)
     sim.render()
 
