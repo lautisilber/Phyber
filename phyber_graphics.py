@@ -190,6 +190,7 @@ class Renderer_3D_runtime:
         return triangles
 
     def draw_bodies(self):
+        print(self.deltaTime * self.simSpeed)
         self.engine.calculate_forces(self.deltaTime * self.simSpeed)
         tris = self.to_2D(self.engine.bodies)
         for t in tris:
@@ -212,6 +213,7 @@ class Renderer_3D_runtime:
                 b.set_rotationX(theta * 0.5)
 
             self.deltaTime = self.clock.tick(self.fps)
+            
             pygame.display.update()
 
         pygame.quit()
@@ -223,7 +225,7 @@ class Renderer_3D_Offline:
         self.simSpeed = simSpeed
         self.fps = fps
         self.iterations = seconds * self.fps
-        self.deltaTime = 1 / self.fps
+        self.tick = (1 / fps) * simSpeed
 
         self.size = size
 
@@ -344,8 +346,9 @@ class Renderer_3D_Offline:
                 if right == -1:
                     self.frameBuffer[r][left] = col
                 else:
-                    for i in range(left, right + 1):
-                        self.frameBuffer[r][i] = col
+                    #for i in range(left, right + 1):
+                    #    self.frameBuffer[r][i] = col
+                    self.frameBuffer[r][left:right+1] = col
 
     def get_lum_value(self, angle):
         val = 255 * angle
@@ -422,7 +425,7 @@ class Renderer_3D_Offline:
             os.mkdir(self.tempPath)
         if tqdmInstalled:
             for i in tqdm(range(self.iterations)):
-                self.engine.calculate_forces(self.deltaTime * self.simSpeed * i)
+                self.engine.calculate_forces(self.tick)
                 tris = self.to_2D(self.engine.bodies)
                 for t in tris:
                     self.fill_triangle(t[:3], t[3])
@@ -431,13 +434,41 @@ class Renderer_3D_Offline:
                 self.reser_frame_buffer()
         else:
             for i in range(self.iterations):
-                self.engine.calculate_forces(self.deltaTime * self.simSpeed * i)
+                self.engine.calculate_forces(self.tick)
                 tris = self.to_2D(self.engine.bodies)
                 for t in tris:
                     self.fill_triangle(t[:3], t[3])
                 img = Image.fromarray(self.frameBuffer, 'RGB')
                 img.save(os.path.join(self.tempPath, str(i) + '.png'))
                 self.reser_frame_buffer()
+
+        try:
+            import cv2
+
+            images = list()
+            i = 0
+            getImages = True
+            while getImages:
+                getImages = False
+                for file in os.listdir(self.tempPath):
+                    if file == (str(i) + '.png'):
+                        images.append(os.path.join(self.tempPath, file))
+                        i += 1
+                        getImages = True
+                        break
+
+            frame = cv2.imread(os.path.join(self.tempPath, images[0]))
+            height, width, layers = frame.shape
+
+            video = cv2.VideoWriter(os.path.join(self.tempPath, 'video.avi'), 0, 1, (width,height))
+
+            for image in images:
+                video.write(cv2.imread(os.path.join(self.tempPath, image)))
+
+            cv2.destroyAllWindows()
+            video.release()
+        except:
+            print("cv2 required to render video! All frames are stored under './temp'")
 
 
 
@@ -459,7 +490,7 @@ def demo2d():
     sim = Renderer_2D_runtime(phyber, 250, (600, 400), 30)
 
 def demo3d():
-    b1 = phyber_engine.p_Ball_3D(120, 12)
+    b1 = phyber_engine.p_Ball_3D(60, 12)
     b1.set_translation(1, 0, -5)
     b1.set_velocity(vec4(-0.00005, 0, 0, 1))
 
@@ -479,7 +510,7 @@ def demo3d():
     sim.init()
 
 def demo3dOffline():
-    b1 = phyber_engine.p_Ball_3D(120, 12)
+    b1 = phyber_engine.p_Ball_3D(60, 12)
     b1.set_translation(1, 0, -5)
     b1.set_velocity(vec4(-0.00005, 0, 0, 1))
 
@@ -491,10 +522,10 @@ def demo3dOffline():
     b3.set_translation(-2, -1, -7)
     b3.set_velocity(vec4(0.00001, 0, 0, 1))
 
-    size = (600, 400)
+    size = (200, 75)
     phyber = phyber_engine.Phyber_3D([b1, b2])
 
-    sim = Renderer_3D_Offline(phyber, 20, size, 15, 4)
+    sim = Renderer_3D_Offline(phyber, 1600, size, 1, 20)
     sim.set_proj(90, 0.01, 100)
     sim.render()
 
