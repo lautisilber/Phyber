@@ -423,6 +423,7 @@ class Renderer_3D_Offline:
     def render(self):
         if not os.path.exists(self.tempPath):
             os.mkdir(self.tempPath)
+        theta = 0
         if tqdmInstalled:
             for i in tqdm(range(self.iterations)):
                 self.engine.calculate_forces(self.tick)
@@ -432,6 +433,10 @@ class Renderer_3D_Offline:
                 img = Image.fromarray(self.frameBuffer, 'RGB')
                 img.save(os.path.join(self.tempPath, str(i) + '.png'))
                 self.reser_frame_buffer()
+                theta += 0.05 * self.tick / self.simSpeed
+                for b in self.engine.bodies:
+                    b.set_rotationZ(theta)
+                    b.set_rotationX(theta * 0.5)
         else:
             for i in range(self.iterations):
                 self.engine.calculate_forces(self.tick)
@@ -441,6 +446,10 @@ class Renderer_3D_Offline:
                 img = Image.fromarray(self.frameBuffer, 'RGB')
                 img.save(os.path.join(self.tempPath, str(i) + '.png'))
                 self.reser_frame_buffer()
+                theta += 0.05 * self.tick / self.simSpeed
+                for b in self.engine.bodies:
+                    b.set_rotationZ(theta)
+                    b.set_rotationX(theta * 0.5)
 
         try:
             import cv2
