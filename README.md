@@ -1,2 +1,2 @@
 # Phyber
-my own physics sandbox
+my own newtonian physics sandbox
