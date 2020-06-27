@@ -1,3 +1,4 @@
 *.png
 *.avi
 temp/
+.DS_Store
