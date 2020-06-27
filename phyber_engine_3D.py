@@ -33,7 +33,7 @@ class p_Ball_3D:
         self.scale = mat4x4.mat_scale(self.radius)
 
         self.tris = list()
-        reader = OBJ_Reader.ObjReader('Sphere.obj')
+        reader = OBJ_Reader.ObjReader('models/Sphere.obj')
         for t in reader.triangles:
             v1 = vec4(t[0][0], t[0][1], t[0][2], 1)
             v2 = vec4(t[1][0], t[1][1], t[1][2], 1)
