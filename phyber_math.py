@@ -322,9 +322,10 @@ class mat4x4:
     @staticmethod
     def mat_scale(scale):
         mat = mat4x4()
-        for i in range(4):
+        for i in range(3):
             mat[i][i] = scale
-            return mat
+        mat[3][3] = 1
+        return mat
 
 
 

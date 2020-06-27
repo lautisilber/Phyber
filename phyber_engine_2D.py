@@ -1,5 +1,6 @@
-import math
+import math, os
 from phyber_math import vec2, vec4, mat4x4
+import phyber_logging
 
 class p_Ball_2D:
     def __init__(self, mass, radius):
@@ -50,9 +51,6 @@ class p_CircleMarker_2D:
     def set_acceleration(self, acc):
         self.acceleration = vec2(acc[0], acc[1])
 
-    def log_info(self):
-        print('{}\n\tpos = ({}, {})\n\tvel = ({}, {})\n\tacc = ({}, {})'.format(self.name, self.position[0], self.position[1], self.velocity[0], self.velocity[1], self.acceleration[0], self.acceleration[1]))
-
 class p_LineMarker_2D:
     def __init__(self, colour, thikness, pos, scale = 10000):
         self.colour = colour
@@ -87,6 +85,14 @@ class p_LineMarker_2D:
 class Phyber_2D:
     def __init__(self, bodies, markers):
         self.G = 6.67408 * (10 ** -11)
+
+        import sys
+        self.host = sys.platform
+        self.clear = ''
+        if self.host == 'windows':
+            self.clear = 'cls'
+        else:
+            self.clear = 'clear'
 
         self.bodies = list()
         for b in bodies:
@@ -167,118 +173,19 @@ class Phyber_2D:
             self.linearMomentum[0].translate(self.massCenter.position)
         else:
             self.linearMomentum[0].translate([100, 100])
-        #print('({}, {}), ({}, {})'.format(self.linearMomentum[1].vert1[0], self.linearMomentum[1].vert1[1], self.linearMomentum[1].vert2[0], self.linearMomentum[1].vert2[1]))
-        print(self.linearMomentum[1].vert2)
 
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-
-class p_Ball_3D:
-    class Triangle:
-        def __init__(self, verts, normal = [0, 0, 0]):
-            self.verts = verts
-            self.normal = vec4(normal[0], normal[1], normal[2], 1)
-            self.normal = self.normal.normalized()
-
-        def check(self):
-            assert len(self.verts)
-            if len(self.verts) == 3:
-                return True
-            else:
-                return False
-
-    def __init__(self, mass, radius):
-        import OBJ_Reader
-
-        self.radius = radius
-        self.mass = mass
-        self.acceleration = vec4(0, 0, 0, 1)
-        self.velocity = vec4(0, 0, 0, 1)
-        self.position = vec4(0, 0, 0, 1)
-        self.tris = list()
-        reader = OBJ_Reader.ObjReader('Sphere.obj')
-        for t in reader.triangles:
-            v1 = vec4(t[0][0], t[0][1], t[0][2], 1)
-            v2 = vec4(t[1][0], t[1][1], t[1][2], 1)
-            v3 = vec4(t[2][0], t[2][1], t[2][2], 1)
-            self.tris.append(p_Ball_3D.Triangle([v1, v2, v3], t[3]))
-
-        self.trans = mat4x4.make_identity()
-        self.rotX = mat4x4.make_identity()
-        self.rotY = mat4x4.make_identity()
-        self.rotZ = mat4x4.make_identity()
-        self.scale = radius / 10
-        self.apply_scale()
-
-    def set_velocity(self, vel):
-        self.velocity = vel
-
-    def set_position(self, pos):
-        self.position = pos
-
-    def apply_acceleration(self, deltaTime):
-        self.velocity += self.acceleration * deltaTime
-
-        self.acceleration = vec4(0, 0, 0, 1)
-
-        self.position += self.velocity * deltaTime
-        self.trans = mat4x4.mat_translation(self.position[0], self.position[1], self.position[2])
-
-    def set_translation(self, x, y, z):
-        self.position = vec4(x, y, z, 1)
-        self.trans = mat4x4.mat_translation(self.position[0], self.position[1], self.position[2])
-
-    def set_rotationX(self, angleRad):
-        self.rotX = mat4x4.make_rot_x(angleRad)
-
-    def set_rotationY(self, angleRad):
-        self.rotY = mat4x4.make_rot_y(angleRad)
-
-    def set_rotationZ(self, angleRad):
-        self.rotZ = mat4x4.make_rot_z(angleRad)
-
-    def apply_scale(self):
-        for i in range(len(self.tris)):
-            for n in range(len(self.tris[i].verts)):
-                self.tris[i].verts[n] = self.scale * self.tris[i].verts[n]
-
-class Phyber_3D:
-    def __init__(self, bodies):
-        self.G = 6.67408 * (10 ** -11)
-        self.bodies = bodies
-        self.width = 1
-        self.height = 1
-
-    def calculate_forces(self, deltaTime):
-        # gravity
-        self.calc_gravity()
-
-        for b in self.bodies:
-            b.apply_acceleration(deltaTime)
-
-    def calc_gravity(self):
+    def log(self):
+        table = list()
+        table.append(['Object', '', 'x', 'y'])
+        table.append(['Mass Center:'])
+        table.append(['', 'Position', '{:0<7}'.format(round(self.massCenter.position[0], 7)), '{:0<7}'.format(round(self.massCenter.position[1], 7))])
+        table.append(['', 'Velocity', '{:0<7}'.format(round(self.massCenter.velocity[0], 7)), '{:0<7}'.format(round(self.massCenter.velocity[1], 7))])
+        table.append(['', 'Acceleration', '{:0<7}'.format(round(self.massCenter.acceleration[0], 7)), '{:0<7}'.format(round(self.massCenter.acceleration[1], 7))])
+        table.append(['', 'Linear Momentum', '{:0<7}'.format(round(self.linearMomentum[0].pos[0], 7)), '{:0<7}'.format(round(self.linearMomentum[0].pos[1], 7))])
         for i in range(len(self.bodies)):
-            for n in range(i + 1, len(self.bodies), 1):
-                distance = vec4.vec_distance(self.bodies[i].position, self.bodies[n].position)
-                if distance != 0:
-                    force = self.G * ((self.bodies[i].mass * self.bodies[n].mass) / (distance ** 2))
-                else:
-                    log = 'Distance between bodies {} and {} is 0'.format(i, n)
-                    raise Exception(log)
-
-                unionVec = vec4.vec_from_points(self.bodies[i].position, self.bodies[n].position)
-                self.bodies[i].acceleration += (unionVec * force) * (1 / self.bodies[i].mass)
-                self.bodies[n].acceleration += (unionVec * force) * (-1 / self.bodies[n].mass)
-
-def main():
-    b1 = p_Ball_2D(5, 10)
-    b1.set_position([5, 10])
-    b2 = p_Ball_2D(2, 5)
-
-    phyber = Phyber_2D([b1, b2], [True, True, False])
-    phyber.calculate_forces(0.1)
-
-    b1.log_info()
-    b2.log_info()
-
-if __name__ == '__main__':
-    main()
+            table.append(['Body {}'.format(i + 1)])
+            table.append(['', 'Position', '{:0<7}'.format(round(self.bodies[i].position[0], 7)), '{:0<7}'.format(round(self.bodies[i].position[1], 7))])
+            table.append(['', 'Velocity', '{:0<7}'.format(round(self.bodies[i].velocity[0], 7)), '{:0<7}'.format(round(self.bodies[i].velocity[1], 7))])
+            table.append(['', 'Acceleration', '{:0<7}'.format(round(self.bodies[i].acceleration[0], 7)), '{:0<7}'.format(round(self.bodies[i].acceleration[1], 7))])
+            table.append(['', 'Linear Momentum', '{:0<7}'.format(round(self.linearMomentum[i + 1].pos[0], 7)), '{:0<7}'.format(round(self.linearMomentum[i + 1].pos[1], 7))])
+        phyber_logging.table(table, 20)
