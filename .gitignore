@@ -2,3 +2,4 @@
 *.avi
 temp/
 .DS_Store
+.vscode/
