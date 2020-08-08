@@ -25,8 +25,8 @@ class RelK:
             x = Math.LorentzX(s_time, xp, obj.vel[0])
             y = Math.LorentzX(s_time, yp, obj.vel[1])
             data.append([e.name, (s_time, x, y), (tp, xp, yp)])
-        # data is [ [ event name, (coords ov event 1 in S), (coord of event 1 in S') ],
-        #           [ event name, (coords ov event 2 in S), (coord of event 2 in S') ]
+        # data is [ [ event name, (coords of event 1 in S), (coord of event 1 in S') ], --> event 1
+        #           [ event name, (coords of event 2 in S), (coord of event 2 in S') ], --> event 2
         #           ...]        
         return data
 
@@ -42,11 +42,13 @@ class RelK:
                 for element in d:
                     orderedData.append(element)
             self.logData.append(orderedData)
-        return orderedData
 
     def LogData(self):
         for obj in self.logData:
             Log.LogEventsInSystems(obj)
+    
+    def GetData(self):
+        return self.logData
 
 def main():
     import math
@@ -60,9 +62,9 @@ def main():
     o2 = Object([e3, e4], C / 10, C / 10, 'Object 2')
     o3 = Object([e5, e6], C, 0, 'Object 3')
     r = RelK([o1, o2, o3])
-    #allData = r.Snapshot_time(1)
     r.CalculateIteration_time(0, 1, 0.1)
     r.LogData()
+    print(r.GetData())
 
 if __name__ == '__main__':
     main()
